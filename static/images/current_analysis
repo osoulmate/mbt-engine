@@ -1,0 +1,22 @@
+// CDFG Analyzer Output
+digraph {
+	rankdir=TB size="10,8"
+	node [fontname=Arial shape=box style=filled]
+	Start [label=<<table border="0" cellborder="0"><tr><td><b>Start</b></td></tr></table>> fillcolor=lavender]
+	If_Check_152 [label=<<table border="0" cellborder="0"><tr><td><b>If_Check_152</b></td></tr><tr><td><i>amount &gt; 5000</i></td></tr></table>> fillcolor=lavender]
+	True_Path_152 [label=<<table border="0" cellborder="0"><tr><td><b>True_Path_152</b></td></tr></table>> fillcolor=lavender]
+	If_Check_640 [label=<<table border="0" cellborder="0"><tr><td><b>If_Check_640</b></td></tr><tr><td><i>amount &lt; 1000</i></td></tr></table>> fillcolor=lavender]
+	True_Path_640 [label=<<table border="0" cellborder="0"><tr><td><b>True_Path_640</b></td></tr></table>> fillcolor=lavender]
+	Exit_128 [label=<<table border="0" cellborder="0"><tr><td><b>Exit_128</b></td></tr></table>> fillcolor=lavender]
+	False_Path_640 [label=<<table border="0" cellborder="0"><tr><td><b>False_Path_640</b></td></tr></table>> fillcolor=lavender]
+	Exit_872 [label=<<table border="0" cellborder="0"><tr><td><b>Exit_872</b></td></tr></table>> fillcolor=lavender]
+	False_Path_152 [label=<<table border="0" cellborder="0"><tr><td><b>False_Path_152</b></td></tr></table>> fillcolor=lavender]
+	Start -> If_Check_152 [label="" color=black penwidth=1.0]
+	If_Check_152 -> True_Path_152 [label="amount &gt; 5000" color=black penwidth=1.0]
+	If_Check_152 -> False_Path_152 [label="Not(amount &gt; 5000)" color=black penwidth=1.0]
+	True_Path_152 -> If_Check_640 [label="" color=black penwidth=1.0]
+	If_Check_640 -> True_Path_640 [label="amount &lt; 1000" color=black penwidth=1.0]
+	If_Check_640 -> False_Path_640 [label="Not(amount &lt; 1000)" color=black penwidth=1.0]
+	True_Path_640 -> Exit_128 [label="" color=black penwidth=1.0]
+	False_Path_640 -> Exit_872 [label="" color=black penwidth=1.0]
+}

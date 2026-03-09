@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>ClawVerify - 智能代码路径分析平台</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 40px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .upload-section { margin: 20px 0; padding: 20px; border: 2px dashed #bdc3c7; text-align: center; }
+        .result-img { margin-top: 30px; width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ClawVerify 智能代码审计</h1>
+        <p>基于 SMT 约束求解与 CDFG 遍历的代码逻辑验证引擎</p>
+        
+        <div class="upload-section">
+            <form method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".py">
+                <button type="submit">开始逻辑审计</button>
+            </form>
+        </div>
+
+        {% if image_url %}
+        <h3>分析结果可视化：</h3>
+        <img src="{{ image_url }}" class="result-img" alt="CDFG Analysis Result">
+        {% endif %}
+    </div>
+</body>
+</html>
