@@ -20,39 +20,54 @@ class CDFGNode:
 # ==========================================
 class CDFGAnalyzer:
     def __init__(self):
-        self.all_feasible_paths = []
-        self.all_nodes = []
+        self.all_feasible_paths = []    # 存储路径节点列表
+        self.all_nodes = []             # 存储图中所有节点
+        self.generated_models = []      # 用于存储 Web 端展示的测试数据
 
     def find_paths(self, current_node, target_node, constraints, current_path):
         """
-        深度优先搜索 + SMT 剪枝
+        深度优先搜索 + SMT 约束检查
         """
-        # 1. 累加当前节点的指令到约束集
+        # 1. 累加当前节点的指令到路径约束中
         new_constraints = constraints + current_node.instructions
         current_path.append(current_node.name)
 
-        # 2. 终止条件：到达目标节点
-        if current_node == target_node or current_node.is_exit:
-            print(f"✅ 发现可行路径: {' -> '.join(current_path)}")
+        # 2. 终止条件：到达退出节点
+        if current_node.is_exit:
+            path_str = " -> ".join(current_path)
             self.all_feasible_paths.append(list(current_path))
-            self._print_model(new_constraints)
+            
+            # --- 核心：利用 Z3 生成模型数据 ---
+            s = Solver()
+            s.add(new_constraints)
+            if s.check() == sat:
+                model = s.model()
+                # 遍历所有变量并格式化输出
+                model_data = ", ".join([f"{d} = {model[d]}" for d in model.decls()])
+                
+                # 存入列表，供 Flask 渲染展示
+                self.generated_models.append({
+                    "path": path_str,
+                    "inputs": f"[{model_data}]" if model_data else "[No Params Needed]"
+                })
             return
 
-        # 3. 遍历分支
+        # 3. 递归遍历子节点
         for next_node, branch_cond in current_node.successors:
-            # 组合约束：已有约束 + 节点指令 + 分支跳转条件
-            combined_constraints = new_constraints + [branch_cond]
+            # 只有 branch_cond 不为 True（即有实际判断条件）时才加入约束
+            combined_constraints = new_constraints
+            if branch_cond is not True:
+                combined_constraints = combined_constraints + [branch_cond]
             
-            # 使用 Z3 检查可满足性
             s = Solver()
             s.add(combined_constraints)
             
             if s.check() == sat:
-                # 只有逻辑成立才继续递归
+                # 逻辑成立才继续向下搜索
                 self.find_paths(next_node, target_node, combined_constraints, list(current_path))
             else:
-                print(f"❌ 剪枝：路径 {' -> '.join(current_path)} -> {next_node.name} 逻辑矛盾，不可达")
-
+                # 逻辑矛盾则在终端打印拦截信息
+                print(f"❌ 逻辑审计：路径 {' -> '.join(current_path)} -> {next_node.name} 已拦截（约束冲突）")
     def _print_model(self, constraints):
         """打印能触发该路径的输入示例"""
         s = Solver()

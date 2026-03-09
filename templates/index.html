@@ -29,6 +29,27 @@
         <h3>分析结果可视化：</h3>
         <img src="{{ image_url }}" class="result-img" alt="CDFG Analysis Result">
         {% endif %}
+{% if test_cases %}
+<div style="margin-top: 30px;">
+    <h3>🚀 自动生成的测试用例 (ATPG)</h3>
+    <table border="1" style="width: 100%; border-collapse: collapse; background: #fff;">
+        <thead style="background: #f8f9fa;">
+            <tr>
+                <th style="padding: 10px;">执行路径</th>
+                <th style="padding: 10px;">建议测试输入 (SMT Model)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for case in test_cases %}
+            <tr>
+                <td style="padding: 10px; font-family: monospace;">{{ case.path }}</td>
+                <td style="padding: 10px; color: #27ae60; font-weight: bold;">{{ case.inputs }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
     </div>
 </body>
 </html>

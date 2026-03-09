@@ -1,7 +1,7 @@
 def nested_logic_demo(x):
     if x > 5:
-        if x < 2:  # 这是一个深层嵌套的矛盾点
-            return "Impossible"
+        if x > 10:  
+            return "OK"
         else:
-            return "Greater than 5"
+            return "大于5小于10"
     return "Less or equal to 5"
