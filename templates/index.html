@@ -9,6 +9,15 @@
         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
         .upload-section { margin: 20px 0; padding: 20px; border: 2px dashed #bdc3c7; text-align: center; }
         .result-img { margin-top: 30px; width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+        .alert { margin-top: 12px; padding: 10px 12px; border-radius: 6px; }
+        .alert.error { background: #fdecea; color: #b42318; border: 1px solid #f7b4ad; }
+        .alert.warn { background: #fff8e8; color: #9a6700; border: 1px solid #f2d79f; }
+        .alert.info { background: #e8f4fd; color: #0b5394; border: 1px solid #9ec5e5; }
+        .empty-state { margin-top: 16px; color: #6b7280; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th, td { padding: 10px; border: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
         button { background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #2980b9; }
     </style>
@@ -17,39 +26,71 @@
     <div class="container">
         <h1>ClawVerify 智能代码审计</h1>
         <p>基于 SMT 约束求解与 CDFG 遍历的代码逻辑验证引擎</p>
-        
+
         <div class="upload-section">
             <form method="post" enctype="multipart/form-data">
                 <input type="file" name="file" accept=".py">
                 <button type="submit">开始逻辑审计</button>
             </form>
+            <p>限制：仅支持 <code>.py</code> 文件，大小不超过 2MB。</p>
         </div>
+
+        {% if error_message %}
+        <div class="alert error">{{ error_message }}</div>
+        {% endif %}
+
+        {% if warnings %}
+        <div class="alert warn">
+            <strong>解析告警：</strong>
+            <ul>
+                {% for item in warnings %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if blocked_paths %}
+        <div class="alert info">
+            <strong>不可达路径：</strong>
+            <ul>
+                {% for path in blocked_paths %}
+                <li>{{ path }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
         {% if image_url %}
         <h3>分析结果可视化：</h3>
         <img src="{{ image_url }}" class="result-img" alt="CDFG Analysis Result">
+        {% else %}
+        <p class="empty-state">尚未生成分析图。请上传代码文件后开始审计。</p>
         {% endif %}
-{% if test_cases %}
-<div style="margin-top: 30px;">
-    <h3>🚀 自动生成的测试用例 (ATPG)</h3>
-    <table border="1" style="width: 100%; border-collapse: collapse; background: #fff;">
-        <thead style="background: #f8f9fa;">
-            <tr>
-                <th style="padding: 10px;">执行路径</th>
-                <th style="padding: 10px;">建议测试输入 (SMT Model)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for case in test_cases %}
-            <tr>
-                <td style="padding: 10px; font-family: monospace;">{{ case.path }}</td>
-                <td style="padding: 10px; color: #27ae60; font-weight: bold;">{{ case.inputs }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
+
+        {% if test_cases %}
+        <div style="margin-top: 30px;">
+            <h3>🚀 自动生成的测试用例 (ATPG)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>执行路径</th>
+                        <th>建议测试输入 (SMT Model)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in test_cases %}
+                    <tr>
+                        <td style="font-family: monospace;">{{ case.path }}</td>
+                        <td style="color: #27ae60; font-weight: bold;">{{ case.inputs }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif image_url %}
+        <p class="empty-state">未生成可行测试数据，请检查逻辑约束。</p>
+        {% endif %}
     </div>
 </body>
 </html>

@@ -42,3 +42,15 @@ Q1：demo.py生成的代码审计图片中显示的数字是什么意思？
 
 A1: 为了支持对任意深度嵌套逻辑的自动化解析，系统在构建 CDFG 时引入了基于 AST 节点内存指纹的动态编号机制。这些数字确保了在复杂的递归处理过程中，每一个条件分支节点和路径节点都拥有全局唯一的标识符，从而避免了路径搜索时的命名冲突，并为后续的 SMT 约束回溯提供了精确的索引。
 
+
+
+## 运行方式
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+默认仅在 `FLASK_DEBUG=1` 时开启 Debug 模式。
