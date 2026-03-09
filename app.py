@@ -33,6 +33,8 @@ def index():
     warnings = []
     blocked_paths = []
     error_message = None
+    source_code = None
+    source_filename = None
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -49,6 +51,8 @@ def index():
             file.save(file_path)
 
             try:
+                source_code = file_path.read_text(encoding="utf-8")
+                source_filename = safe_name
                 result = analysis_service.analyze_file(file_path)
                 test_cases = result["test_cases"]
                 warnings = result["warnings"]
@@ -68,6 +72,8 @@ def index():
         warnings=warnings,
         blocked_paths=blocked_paths,
         error_message=error_message,
+        source_code=source_code,
+        source_filename=source_filename,
     )
 
 

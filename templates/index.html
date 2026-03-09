@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <title>ClawVerify - 智能代码路径分析平台</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 40px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #1f2937; }
+        .page-layout { display: flex; min-height: 100vh; }
+        .container { flex: 1; max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .content-wrap { flex: 1; padding: 40px 24px; transition: margin-right .3s ease; }
+        .content-wrap.with-drawer { margin-right: min(42vw, 560px); }
         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
         .upload-section { margin: 20px 0; padding: 20px; border: 2px dashed #bdc3c7; text-align: center; }
         .result-img { margin-top: 30px; width: 100%; border: 1px solid #ddd; border-radius: 8px; }
@@ -20,10 +23,32 @@
         code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
         button { background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #2980b9; }
+        .drawer-toggle { position: fixed; right: 16px; top: 18px; z-index: 1200; background: #111827; color: #fff; border-radius: 999px; padding: 10px 16px; box-shadow: 0 8px 20px rgba(17,24,39,.2); }
+        .drawer { position: fixed; top: 0; right: 0; width: min(42vw, 560px); height: 100vh; background: #0f172a; color: #e2e8f0; transform: translateX(100%); transition: transform .3s ease; z-index: 1100; box-shadow: -10px 0 25px rgba(0,0,0,.2); display: flex; flex-direction: column; }
+        .drawer.open { transform: translateX(0); }
+        .drawer-header { padding: 20px 24px 12px; border-bottom: 1px solid rgba(148,163,184,.25); }
+        .drawer-title { margin: 0; font-size: 18px; }
+        .drawer-subtitle { margin: 8px 0 0; font-size: 13px; color: #94a3b8; word-break: break-all; }
+        .drawer-body { margin: 0; padding: 20px 24px 28px; overflow: auto; flex: 1; }
+        .drawer code { background: transparent; padding: 0; display: block; white-space: pre; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height: 1.55; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .35); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 1000; }
+        .overlay.show { opacity: 1; pointer-events: all; }
+        @media (max-width: 960px) {
+            .content-wrap.with-drawer { margin-right: 0; }
+            .drawer { width: 100vw; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    {% set has_source = source_code is not none %}
+    <button id="drawerToggle" class="drawer-toggle" type="button" {% if not has_source %}disabled{% endif %}>
+        {% if has_source %}查看源码{% else %}等待上传源码{% endif %}
+    </button>
+    <div id="drawerOverlay" class="overlay"></div>
+
+    <div class="page-layout">
+        <div id="contentWrap" class="content-wrap {% if has_source %}with-drawer{% endif %}">
+            <div class="container">
         <h1>ClawVerify 智能代码审计</h1>
         <p>基于 SMT 约束求解与 CDFG 遍历的代码逻辑验证引擎</p>
 
@@ -91,6 +116,49 @@
         {% elif image_url %}
         <p class="empty-state">未生成可行测试数据，请检查逻辑约束。</p>
         {% endif %}
+            </div>
+        </div>
+
+        {% if has_source %}
+        <aside id="sourceDrawer" class="drawer open" aria-label="上传源码展示">
+            <div class="drawer-header">
+                <h3 class="drawer-title">📄 上传代码对照区</h3>
+                <p class="drawer-subtitle">{{ source_filename }}</p>
+            </div>
+            <pre class="drawer-body"><code>{{ source_code }}</code></pre>
+        </aside>
+        {% endif %}
     </div>
+
+    <script>
+        const toggleButton = document.getElementById('drawerToggle');
+        const sourceDrawer = document.getElementById('sourceDrawer');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const contentWrap = document.getElementById('contentWrap');
+
+        const setDrawerState = (open) => {
+            if (!sourceDrawer) return;
+            sourceDrawer.classList.toggle('open', open);
+            drawerOverlay?.classList.toggle('show', open);
+            contentWrap?.classList.toggle('with-drawer', open && window.innerWidth > 960);
+            if (toggleButton) {
+                toggleButton.textContent = open ? '隐藏源码' : '查看源码';
+            }
+        };
+
+        if (sourceDrawer && toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                setDrawerState(!sourceDrawer.classList.contains('open'));
+            });
+            drawerOverlay?.addEventListener('click', () => setDrawerState(false));
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 960) {
+                    contentWrap?.classList.remove('with-drawer');
+                } else if (sourceDrawer.classList.contains('open')) {
+                    contentWrap?.classList.add('with-drawer');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
