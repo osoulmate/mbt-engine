@@ -71,4 +71,5 @@ export AUTH_USERNAME="your-admin"
 export AUTH_PASSWORD="your-strong-password"
 python app.py
 ```
-
+# 切换分支
+git switch -c codex/optimize-username/password-authentication-and-ui --track origin/codex/optimize-username/password-authentication-and-ui
