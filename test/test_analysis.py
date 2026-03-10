@@ -23,6 +23,42 @@ class AnalysisServiceTest(unittest.TestCase):
             self.assertTrue(result["test_cases"])
             self.assertIn("images/test_out.png", result["output_filename"])
 
+    def test_analyze_multiple_functions_and_assignments(self):
+        with tempfile.TemporaryDirectory() as td:
+            src = Path(td) / "multi.py"
+            src.write_text(
+                "def f1(x):\n"
+                "    y = x + 1\n"
+                "    assert y > 0\n"
+                "    return y\n\n"
+                "def f2(z):\n"
+                "    if z < 0:\n"
+                "        return -1\n"
+                "    return 1\n",
+                encoding="utf-8",
+            )
+            service = AnalysisService(Path(td))
+            result = service.analyze_file(src, output_name="multi_out")
+            self.assertTrue(result["test_cases"])
+            functions = {item.get("function") for item in result["test_cases"]}
+            self.assertIn("f1", functions)
+            self.assertIn("f2", functions)
+            self.assertEqual(result["output_filename"], "images/multi_out.png")
+
+    def test_warn_on_augmented_assignment(self):
+        with tempfile.TemporaryDirectory() as td:
+            src = Path(td) / "aug.py"
+            src.write_text(
+                "def f(x):\n"
+                "    x += 1\n"
+                "    return x\n",
+                encoding="utf-8",
+            )
+            service = AnalysisService(Path(td))
+            result = service.analyze_file(src, output_name="aug_out")
+            warning_text = "\n".join(result["warnings"])
+            self.assertIn("Unsupported augmented assignment", warning_text)
+
 
 class FlaskAppTest(unittest.TestCase):
     def setUp(self):
