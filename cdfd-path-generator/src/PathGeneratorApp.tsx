@@ -9,20 +9,26 @@ interface TestCase {
   final_state: string;
 }
 
-// --- 专门用于渲染 Mermaid 图像的子组件 ---
+// --- 专门用于渲染 Mermaid 图像的子组件 (包含全屏功能升级版) ---
 const MermaidViewer = ({ code }: { code: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false); // 新增：全屏状态控制
 
   useEffect(() => {
-    // 初始化 Mermaid 配置 (使用暗色主题适配我们的 UI)
     mermaid.initialize({ startOnLoad: false, theme: 'dark' });
 
     if (code && containerRef.current) {
-      // 每次代码更新时，尝试重新渲染
       mermaid.render('mermaid-preview-svg', code)
         .then((result) => {
           if (containerRef.current) {
             containerRef.current.innerHTML = result.svg;
+
+            // 优化：让渲染出的 SVG 能够自适应容器大小，全屏时更震撼
+            const svgElement = containerRef.current.querySelector('svg');
+            if (svgElement) {
+              svgElement.style.maxWidth = '100%';
+              svgElement.style.maxHeight = '100%';
+            }
           }
         })
         .catch((error) => {
@@ -34,26 +40,67 @@ const MermaidViewer = ({ code }: { code: string }) => {
     } else if (!code && containerRef.current) {
       containerRef.current.innerHTML = '<div style="color: #888; padding: 20px;">暂无图表数据</div>';
     }
-  }, [code]);
+  }, [code, isFullscreen]); // 依赖中加入 isFullscreen，确保切换时图表自适应
+
+  // 动态样式：根据是否全屏切换布局
+  const viewerStyle: React.CSSProperties = isFullscreen ? {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    zIndex: 9999, // 确保在最顶层
+    background: '#1e1e20', // 全屏时使用深色背景填充
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '40px',
+    boxSizing: 'border-box'
+  } : {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'auto',
+    background: '#2d2d2d',
+    borderRadius: '8px',
+    border: '1px solid #444',
+    position: 'relative' // 为按钮的绝对定位提供参照
+  };
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'auto',
-        background: '#2d2d2d',
-        borderRadius: '8px',
-        border: '1px solid #444'
-      }}
-    />
+    <div style={viewerStyle}>
+      {/* 悬浮全屏控制按钮 */}
+      <button
+        onClick={() => setIsFullscreen(!isFullscreen)}
+        style={{
+          position: 'absolute',
+          top: isFullscreen ? '20px' : '10px',
+          right: isFullscreen ? '20px' : '10px',
+          padding: '6px 12px',
+          background: isFullscreen ? '#ff5252' : '#555',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          zIndex: 10000,
+          fontSize: '12px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          transition: 'background 0.2s'
+        }}
+      >
+        {isFullscreen ? '✖ 退出全屏' : '⛶ 全屏预览'}
+      </button>
+
+      {/* 实际渲染图形的内部容器 */}
+      <div
+        ref={containerRef}
+        style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+      />
+    </div>
   );
 };
-
 // --- 主应用组件 ---
 export default function PathGeneratorApp() {
   const [mermaidCode, setMermaidCode] = useState<string>('');
